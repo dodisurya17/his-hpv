@@ -15,8 +15,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Profil & Informasi HPV (disimpan sebagai "content block")
     Route::get('/konten/{section}', [ContentBlockController::class, 'index'])->name('content.index');
+    Route::get('/konten/{section}/tambah', [ContentBlockController::class, 'create'])->name('content.create');
+    Route::post('/konten/{section}', [ContentBlockController::class, 'store'])->name('content.store');
     Route::get('/konten-item/{contentBlock}/edit', [ContentBlockController::class, 'edit'])->name('content.edit');
     Route::put('/konten-item/{contentBlock}', [ContentBlockController::class, 'update'])->name('content.update');
+    Route::delete('/konten-item/{contentBlock}', [ContentBlockController::class, 'destroy'])->name('content.destroy');
 
     // Media Edukasi
     Route::resource('media-edukasi', MediaEducationController::class)

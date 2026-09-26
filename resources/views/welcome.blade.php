@@ -158,7 +158,7 @@
                 <div class="text-center md:text-left">
                     <span class="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 text-[var(--navy-700)] text-xs font-semibold px-3.5 py-1.5 mb-6 shadow-sm">
                         <span class="h-1.5 w-1.5 rounded-full bg-[var(--red-600)]"></span>
-                        Program edukasi &amp; imunisasi HPV
+                        Program edukasi & imunisasi HPV
                     </span>
 
                     <h1 class="font-display font-800 text-4xl sm:text-5xl leading-[1.12] text-brand-navy max-w-lg mx-auto md:mx-0">
@@ -166,7 +166,7 @@
                     </h1>
 
                     <p class="mt-5 text-base sm:text-lg text-slate-500 max-w-md mx-auto md:mx-0">
-                        Satu tempat untuk memahami HPV dan program imunisasinya — disusun sederhana untuk orang tua, guru, dan siswa.
+                        Hadirkan Informasi Seputar Human Papilloma Virus (HIS-HPV)
                     </p>
 
                     <div class="mt-8 flex flex-col sm:flex-row gap-3.5 justify-center md:justify-start">
@@ -236,7 +236,7 @@
             <div class="max-w-lg">
                 <span class="text-xs font-semibold text-[var(--red-600)]">Profil</span>
                 <h2 class="font-display font-700 text-2xl sm:text-3xl text-brand-navy mt-1">Profil HIS-HPV</h2>
-                <p class="mt-2 text-slate-500">Visi &amp; misi kami, serta filosofi di balik logo HIS-HPV.</p>
+                <p class="mt-2 text-slate-500">Visi & misi kami, serta filosofi di balik logo HIS-HPV.</p>
             </div>
 
             @php
@@ -290,7 +290,7 @@
             <div class="max-w-lg">
                 <span class="text-xs font-semibold text-[var(--red-600)]">Informasi HPV</span>
                 <h2 class="font-display font-700 text-2xl sm:text-3xl text-brand-navy mt-1">Informasi Seputar HPV</h2>
-                <p class="mt-2 text-slate-500">Kumpulan bahasan seputar HPV — klik tiap kartu untuk membaca penjelasan lengkapnya.</p>
+                <p class="mt-2 text-slate-500">Kumpulan bahasan seputar HPV, klik tiap kartu untuk membaca penjelasan lengkapnya.</p>
             </div>
 
             @php
@@ -352,6 +352,12 @@
                 </div>
                 @endforelse
             </div>
+
+            @if ($informasi->hasPages())
+            <div class="mt-8">
+                {{ $informasi->fragment('informasi')->onEachSide(1)->links('partials.pagination') }}
+            </div>
+            @endif
 
             {{-- Modal detail Informasi HPV --}}
             <div
@@ -467,6 +473,8 @@
     $docIcon = '
     <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
     <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5" />';
+    // Nama file saat diunduh disamakan dengan judulnya, bukan nama acak di storage.
+    $downloadName = fn ($title, $ext) => \Illuminate\Support\Str::slug($title) . ($ext ? '.' . $ext : '');
     @endphp
 
     <section id="media"
@@ -499,14 +507,16 @@
                 $cover = $mediaItems->first();
                 $coverExt = $cover ? $fileExt($cover->file_url) : null;
                 $isCoverImage = $cover && ($type === 'poster' || in_array($coverExt, $imageExts));
-                $isCoverPdf = $cover && !$isCoverImage && $coverExt === 'pdf';
+                $coverThumb = $cover->thumbnail_url ?? null;
+                $isCoverPdfNoThumb = $cover && !$isCoverImage && !$coverThumb && $coverExt === 'pdf';
                 @endphp
                 <div class="group rounded-2xl bg-white border border-slate-200 overflow-hidden hover:shadow-lg hover:shadow-slate-200/70 transition-shadow">
-                    <div class="relative aspect-[4/3] bg-[var(--navy-100)]/60 flex items-center justify-center text-[var(--navy-700)] overflow-hidden">
+                    <div class="relative aspect-[4/3] bg-[var(--navy-100)]/60 flex items-center justify-center text-[var(--navy-700)] overflow-hidden {{ $cover ? 'cursor-pointer' : '' }}"
+                        @if ($cover) @click="open('{{ $type }}')" @endif>
                         @if ($isCoverImage)
                         <img src="{{ $cover->file_url }}" alt="{{ $cover->title }}" class="w-full h-full object-cover">
                         @elseif ($cover && $type === 'video')
-                        <video src="{{ $cover->file_url }}" class="w-full h-full object-cover" preload="metadata" muted></video>
+                        <video src="{{ $cover->file_url }}" poster="{{ $coverThumb }}" class="w-full h-full object-cover" preload="metadata" muted></video>
                         @if ($cover)
                         <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
                             <span class="h-11 w-11 rounded-full bg-white/85 flex items-center justify-center text-[var(--navy-700)] shadow-md">
@@ -514,18 +524,26 @@
                             </span>
                         </span>
                         @endif
-                        @elseif ($isCoverPdf)
-                        {{-- Halaman pertama PDF dirender langsung oleh viewer bawaan browser --}}
+                        @elseif ($coverThumb)
+                        {{-- Thumbnail halaman/slide pertama, dibuat otomatis saat file diunggah --}}
+                        <img src="{{ $coverThumb }}" alt="{{ $cover->title }}" class="w-full h-full object-cover">
+                        <span class="absolute bottom-2 left-2 text-[10px] font-bold tracking-wide text-white bg-[var(--red-600)] rounded px-1.5 py-0.5">{{ strtoupper($coverExt) }}</span>
+                        @elseif ($isCoverPdfNoThumb)
+                        {{-- Fallback: thumbnail belum sempat dibuat di server, tampilkan viewer PDF bawaan browser --}}
                         <iframe src="{{ $cover->file_url }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH" class="w-full h-full pointer-events-none bg-white" loading="lazy" title="{{ $cover->title }}"></iframe>
                         <span class="absolute bottom-2 left-2 text-[10px] font-bold tracking-wide text-white bg-[var(--red-600)] rounded px-1.5 py-0.5">PDF</span>
                         @elseif ($cover)
-                        {{-- File non-gambar (mis. .pptx) belum bisa dirender jadi gambar tanpa proses di server, jadi tampilkan kartu file yang rapi --}}
+                        {{-- File non-gambar tanpa thumbnail (mis. .pptx saat server belum bisa mengonversi) --}}
                         <div class="flex flex-col items-center gap-2">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-10 w-10">{!! $docIcon !!}</svg>
                             <span class="text-[11px] font-bold uppercase tracking-wide text-[var(--navy-700)]">{{ $coverExt ?: 'File' }}</span>
                         </div>
                         @else
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-10 w-10">{!! $jenis['icon'] !!}</svg>
+                        @endif
+
+                        @if ($cover)
+                        <span class="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></span>
                         @endif
 
                         {{-- Badge jumlah item --}}
@@ -606,18 +624,22 @@
                             @php
                             $ext = $fileExt($item->file_url);
                             $isImage = $type === 'poster' || in_array($ext, $imageExts);
-                            $isPdf = !$isImage && $ext === 'pdf';
+                            $thumb = $item->thumbnail_url ?? null;
+                            $isPdf = !$isImage && !$thumb && $ext === 'pdf';
                             @endphp
                             <div x-show="activeMedia === '{{ $type }}' && mediaIndex === {{ $loop->index }}" class="absolute inset-0 flex items-center justify-center">
                                 @if ($type === 'video')
-                                <video src="{{ $item->file_url }}" class="w-full h-full object-contain" controls preload="metadata"></video>
+                                <video src="{{ $item->file_url }}" poster="{{ $thumb }}" class="w-full h-full object-contain" controls preload="metadata"></video>
                                 @elseif ($isImage)
                                 <img src="{{ $item->file_url }}" alt="{{ $item->title }}" class="w-full h-full object-contain bg-white">
+                                @elseif ($thumb)
+                                {{-- Thumbnail halaman/slide pertama, dibuat otomatis saat file diunggah --}}
+                                <img src="{{ $thumb }}" alt="{{ $item->title }}" class="w-full h-full object-contain bg-white">
                                 @elseif ($isPdf)
-                                {{-- Halaman pertama PDF ditampilkan via viewer PDF bawaan browser --}}
+                                {{-- Fallback: thumbnail belum sempat dibuat di server, tampilkan viewer PDF bawaan browser --}}
                                 <iframe src="{{ $item->file_url }}#toolbar=0&navpanes=0&view=FitH" class="w-full h-full bg-white" title="{{ $item->title }}"></iframe>
                                 @else
-                                {{-- File non-gambar (mis. .pptx/.doc) belum bisa dirender jadi gambar tanpa proses di server --}}
+                                {{-- File non-gambar tanpa thumbnail (mis. .pptx saat server belum bisa mengonversi) --}}
                                 <div class="flex flex-col items-center gap-4 text-center px-6">
                                     <div class="h-20 w-20 rounded-2xl bg-white/10 flex items-center justify-center text-white">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" class="h-10 w-10">{!! $docIcon !!}</svg>
@@ -631,10 +653,11 @@
                             </div>
                             @endforeach
 
-                            {{-- Tombol unduh — selalu tampil di setiap item --}}
+                            {{-- Tombol unduh — selalu tampil di setiap item, nama file disamakan dengan judulnya --}}
                             @foreach ($mediaItems as $item)
+                            @php $ext = $fileExt($item->file_url); @endphp
                             <a x-show="activeMedia === '{{ $type }}' && mediaIndex === {{ $loop->index }}"
-                                href="{{ $item->file_url }}" target="_blank" download
+                                href="{{ $item->file_url }}" target="_blank" download="{{ $downloadName($item->title, $ext) }}"
                                 class="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 hover:bg-white text-[var(--navy-700)] text-xs font-semibold px-3.5 py-2 shadow-md transition-colors">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5">{!! $downloadIcon !!}</svg>
                                 Unduh
@@ -711,7 +734,7 @@
             <div class="max-w-lg">
                 <span class="text-xs font-semibold text-[var(--red-600)]">Box Diskusi</span>
                 <h2 class="font-display font-700 text-2xl sm:text-3xl text-brand-navy mt-1">Box Diskusi</h2>
-                <p class="mt-2 text-slate-500">Ajukan pertanyaan seputar HPV — pertanyaan dan jawaban akan tampil di sini untuk semua pengunjung.</p>
+                <p class="mt-2 text-slate-500">Ajukan pertanyaan seputar HPV, pertanyaan dan jawaban akan tampil di sini untuk semua pengunjung.</p>
             </div>
 
             @if (session('status'))
@@ -760,7 +783,7 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-3.5 w-3.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    Jawaban {{ $d->answeredBy->name ?? 'Admin' }}
+                                    {{ $d->answeredBy->name ?? 'Admin' }}
                                 </p>
                                 <p class="text-sm text-slate-600 break-words">{{ $d->answer }}</p>
                             </div>
@@ -775,8 +798,8 @@
             </div>
 
             @if ($discussions->hasPages())
-            <div class="mt-6 [&_nav]:justify-start">
-                {{ $discussions->fragment('diskusi')->onEachSide(1)->links() }}
+            <div class="mt-6">
+                {{ $discussions->fragment('diskusi')->onEachSide(1)->links('partials.pagination') }}
             </div>
             @endif
         </div>
@@ -798,7 +821,7 @@
             </span>
             <h2 class="font-display font-700 text-2xl sm:text-3xl text-white">Punya pertanyaan seputar HPV?</h2>
             <p class="mt-2 text-white/70 max-w-md mx-auto">Hubungi kami melalui e-mail, tim kami akan membalas secepatnya.</p>
-            <a href="mailto:#" class="inline-flex items-center gap-2 mt-7 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[var(--navy-800)] hover:bg-white/90 transition-colors">
+            <a href="mailto:{{ config('mail.from.address') }}?subject={{ urlencode('Pertanyaan seputar HPV') }}" class="inline-flex items-center gap-2 mt-7 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[var(--navy-800)] hover:bg-white/90 transition-colors">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4">
                     <rect x="3" y="5" width="18" height="14" rx="2" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9 6 9-6" />
@@ -819,13 +842,104 @@
         </div>
     </footer>
 
-    {{-- ============ FLOATING RATING BUTTON ============ --}}
-    <button class="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[var(--navy-700)] shadow-lg shadow-[var(--navy-900)]/30 px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--navy-800)] transition-colors">
-        <svg class="h-4 w-4 text-[var(--gold)]" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.286 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.958z" />
-        </svg>
-        Beri Penilaian
-    </button>
+    {{-- ============ FLOATING RATING BUTTON + MODAL ============ --}}
+    <div x-data="{ open: false, rating: 0, hoverRating: 0 }" @keydown.window.escape="open = false">
+
+        <button type="button" @click="open = true; rating = 0"
+            class="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[var(--navy-700)] shadow-lg shadow-[var(--navy-900)]/30 px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--navy-800)] transition-colors">
+            <svg class="h-4 w-4 text-[var(--gold)]" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.286 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.958z" />
+            </svg>
+            Beri Penilaian
+        </button>
+
+        {{-- Modal rating --}}
+        <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+
+            <div
+                x-show="open"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                @click="open = false"
+                class="absolute inset-0 bg-[var(--navy-900)]/60 backdrop-blur-sm"></div>
+
+            <div
+                x-show="open"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-6 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl bg-white p-7 shadow-2xl text-center">
+
+                <button type="button" @click="open = false" class="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="Tutup">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <div class="h-12 w-12 mx-auto rounded-2xl bg-[var(--navy-100)] flex items-center justify-center text-[var(--gold)]">
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.286 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.958z" />
+                    </svg>
+                </div>
+
+                <h3 class="font-display font-700 text-lg text-brand-navy mt-4">Bagaimana pengalaman Anda?</h3>
+                <p class="text-sm text-slate-500 mt-1">Beri penilaian untuk website HIS-HPV ini.</p>
+
+                <form method="POST" action="{{ route('feedback.store') }}" class="mt-5">
+                    @csrf
+                    <input type="hidden" name="rating" :value="rating">
+
+                    <div class="flex items-center justify-center gap-1.5" @mouseleave="hoverRating = 0">
+                        <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                            <button type="button"
+                                @click="rating = star"
+                                @mouseenter="hoverRating = star"
+                                class="p-1 transition-transform hover:scale-110 focus:outline-none"
+                                :aria-label="`Beri ${star} bintang`">
+                                <svg class="h-8 w-8 transition-colors" :class="(hoverRating || rating) >= star ? 'text-[var(--gold)]' : 'text-slate-200'" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.286 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.286-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.958z" />
+                                </svg>
+                            </button>
+                        </template>
+                    </div>
+
+                    <p class="mt-2 text-xs font-medium h-4" :class="rating ? 'text-[var(--navy-700)]' : 'text-transparent'"
+                        x-text="({1: 'Kurang memuaskan', 2: 'Cukup', 3: 'Baik', 4: 'Sangat baik', 5: 'Luar biasa!'})[rating] || '-'"></p>
+
+                    @error('rating')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+
+                    <button type="submit" :disabled="rating === 0"
+                        class="mt-5 w-full inline-flex justify-center items-center rounded-xl bg-[var(--navy-700)] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[var(--navy-700)]/25 hover:bg-[var(--navy-800)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        Kirim Penilaian
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Toast terima kasih, muncul setelah rating berhasil dikirim --}}
+    @if (session('rating_status'))
+    <div
+        x-data="{ show: true }"
+        x-init="setTimeout(() => show = false, 4000)"
+        x-show="show"
+        x-transition
+        class="fixed bottom-24 right-5 z-50 max-w-xs rounded-2xl bg-white border border-slate-200 shadow-xl px-4 py-3 flex items-start gap-3">
+        <div class="h-8 w-8 shrink-0 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <p class="text-sm text-slate-600">{{ session('rating_status') }}</p>
+    </div>
+    @endif
 
 </body>
 

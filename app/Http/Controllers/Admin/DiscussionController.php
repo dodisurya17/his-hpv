@@ -10,11 +10,25 @@ use Illuminate\View\View;
 
 class DiscussionController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $discussions = Discussion::latest()->get();
+        $search = trim((string) $request->query('q', ''));
+        $status = $request->query('status', 'all');
 
-        return view('admin.discussions.index', compact('discussions'));
+        $discussions = Discussion::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('question', 'like', "%{$search}%");
+                });
+            })
+            ->when($status === 'answered', fn($query) => $query->whereNotNull('answer'))
+            ->when($status === 'unanswered', fn($query) => $query->whereNull('answer'))
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
+
+        return view('admin.discussions.index', compact('discussions', 'search', 'status'));
     }
 
     public function edit(Discussion $discussion): View
