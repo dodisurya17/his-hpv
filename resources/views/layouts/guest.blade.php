@@ -53,7 +53,7 @@
                 style="background-image: radial-gradient(currentColor 1.5px, transparent 1.5px); background-size: 22px 22px; color: #ffffff;"></div>
 
             <a href="/" class="relative z-10 inline-flex items-center gap-3">
-                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'HIS HPV') }}" class="h-14 w-14 drop-shadow-lg">
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'HIS HPV') }}" class="h-14 w-14 drop-shadow-lg rounded-md">
                 <span class="font-display text-2xl font-bold text-white tracking-tight">HIS HPV</span>
             </a>
 
@@ -62,7 +62,7 @@
                     Melindungi generasi dari HPV.
                 </h1>
                 <p class="mt-4 text-[15px] leading-relaxed text-blue-100/90">
-                    Masuk untuk memantau jadwal, status, dan catatan vaksinasi HPV anak dengan mudah dan aman.
+                    Masuk untuk memantau jadwal, status, dan catatan vaksinasi HPV dengan mudah dan aman.
                 </p>
             </div>
 
@@ -70,7 +70,7 @@
                 <svg class="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 1.5l6.5 2.9v5.1c0 4.6-3 8.7-6.5 9.9-3.5-1.2-6.5-5.3-6.5-9.9V4.4L10 1.5zm-1 10.4L6.4 9.3l1.06-1.06L9 9.88l3.54-3.54L13.6 7.4 9 12z" clip-rule="evenodd" />
                 </svg>
-                <span>Data anak terenkripsi &amp; hanya untuk petugas terverifikasi</span>
+                <span>Data terenkripsi &amp; hanya untuk petugas terverifikasi</span>
             </div>
         </div>
 
