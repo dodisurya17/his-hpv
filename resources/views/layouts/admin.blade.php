@@ -11,24 +11,54 @@
             display: none !important;
         }
 
-        input[type="text"], input[type="email"], input[type="password"], input[type="file"],
-        textarea, select {
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"],
+        textarea,
+        select {
             padding: 0.625rem 0.875rem;
             font-size: 0.875rem;
             color: #1e293b;
             background-color: #fff;
             transition: box-shadow .15s ease, border-color .15s ease;
         }
-        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
-        textarea:focus, select:focus {
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
             border-color: #1E3D7B;
             box-shadow: 0 0 0 3px rgba(30, 61, 123, 0.15);
             outline: none;
         }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        /* Desktop: sidebar menempel di kolom kiri dengan tinggi layar penuh dan tidak ikut
+           ter-scroll. Ditulis sebagai CSS biasa (bukan kelas Tailwind) supaya tidak perlu
+           rebuild aset. Mobile tetap berupa menu geser (fixed). */
+        @media (min-width: 768px) {
+            .admin-sidebar {
+                position: sticky;
+                top: 0;
+                height: 100vh;
+                align-self: flex-start;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
     </style>
 </head>
 
@@ -52,7 +82,7 @@
         <div x-show="sidebarOpen" x-cloak x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 z-30 bg-slate-900/50 md:hidden"></div>
 
         <aside
-            class="fixed z-40 inset-y-0 left-0 w-72 md:w-64 shrink-0 bg-gradient-to-b from-[#0F1B3C] to-[#1E3D7B] text-white flex flex-col transform transition-transform duration-200 md:static md:translate-x-0"
+            class="admin-sidebar fixed z-40 inset-y-0 left-0 w-72 md:w-64 shrink-0 bg-gradient-to-b from-[#0F1B3C] to-[#1E3D7B] text-white flex flex-col transform transition-transform duration-200 md:static md:translate-x-0"
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
             <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
@@ -71,8 +101,8 @@
 
             <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
                 @php
-                    $navClass = fn ($active) => 'flex items-center gap-3 rounded-xl px-3.5 py-2.5 font-medium transition '
-                        . ($active ? 'bg-white text-[#1E3D7B] shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white');
+                $navClass = fn ($active) => 'flex items-center gap-3 rounded-xl px-3.5 py-2.5 font-medium transition '
+                . ($active ? 'bg-white text-[#1E3D7B] shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white');
                 @endphp
 
                 <a href="{{ route('admin.dashboard') }}" class="{{ $navClass(request()->routeIs('admin.dashboard')) }}">
@@ -109,9 +139,9 @@
                     </svg>
                     Diskusi
                     @isset($unansweredCount)
-                        @if ($unansweredCount > 0)
-                            <span class="ml-auto text-[11px] font-bold bg-red-500 text-white rounded-full px-2 py-0.5">{{ $unansweredCount }}</span>
-                        @endif
+                    @if ($unansweredCount > 0)
+                    <span class="ml-auto text-[11px] font-bold bg-red-500 text-white rounded-full px-2 py-0.5">{{ $unansweredCount }}</span>
+                    @endif
                     @endisset
                 </a>
 
